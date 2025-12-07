@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Temperaturas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* SEU CSS ORIGINAL MANTIDO (Resumido para não ocupar espaço, mas use o seu completo) */
+        body { background-color: #121212; color: #E0E0E0; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        h1 { color: #BB86FC; font-weight: 300; margin-top: 20px; text-transform: uppercase; letter-spacing: 2px; font-size: 22px; }
+        h2 { color: #03DAC6; font-size: 18px; border-bottom: 1px solid #333; width: 90%; max-width: 1000px; margin-top: 30px; }
+        .row-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 90%; max-width: 1000px; }
+        .card { background-color: #1E1E1E; border-radius: 12px; padding: 20px; width: 200px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border-top: 4px solid transparent; }
+        .card.temp { border-top-color: #FF5252; }
+        .card.energy { border-top-color: #FFC107; }
+        .sensor-label { font-size: 14px; color: #AAA; text-transform: uppercase; }
+        .sensor-data { font-size: 42px; font-weight: 700; color: #FFF; }
+        .unit { font-size: 20px; color: #777; }
+        .status-indicator { margin-top: 40px; font-size: 12px; color: #555; }
+        .online { color: #03DAC6; } .offline { color: #CF6679; }
+        /* Removemos a barra de IP pois agora conectamos direto no servidor Java */
+    </style>
+</head>
+<body>
+
+<h1>Painel de Monitoramento</h1>
+
+<h2>Sensor Interno (A) - Temperaturas</h2>
+<div class="row-container">
+
+    <div class="card temp">
+        <div class="sensor-label">Sensor A</div>
+        <div class="sensor-data">
+            <span id="val-a" th:text="${tempA}">--</span><span class="unit">°C</span>
+        </div>
+    </div>
+
+    <div class="card temp">
+        <div class="sensor-label">Sensor B</div>
+        <div class="sensor-data">
+            <span id="val-b" th:text="${tempB}">--</span><span class="unit">°C</span>
+        </div>
+    </div>
+
+    <div class="card temp">
+        <div class="sensor-label">Sensor C</div>
+        <div class="sensor-data">
+            <span id="val-c" th:text="${tempC}">--</span><span class="unit">°C</span>
+        </div>
+    </div>
+</div>
+
+<h2>Monitoramento Elétrico</h2>
+<div class="row-container">
+    <div class="card energy">
+        <div class="sensor-label">Corrente Total</div>
+        <div class="sensor-data">
+            <span id="val-d" th:text="${corrente}">--</span><span class="unit">A</span>
+        </div>
+    </div>
+</div>
+
+<div class="status-indicator">
+    Status da Conexão: <span id="status-text" class="offline">Conectando ao Servidor...</span>
+</div>
+
+<script>
+    // Inicia a atualização automática assim que carrega
+    window.onload = function() {
+        setInterval(fetchData, 2000); // Atualiza a cada 2 segundos
+    };
+
+    async function fetchData() {
+        const statusText = document.getElementById('status-text');
+
+        try {
+            // MUDANÇA 1: Aponta para a rota de DADOS RECENTES
+            const response = await fetch('/api/reports/latest');
+
+            if (!response.ok) throw new Error("Erro na resposta do Java");
+
+            const data = await response.json();
+
+            // MUDANÇA 2: Mapeia os campos corretos do DashboardDTO
+
+            // Sensor A (Temperatura atual)
+            document.getElementById('val-a').innerText = data.temperature !== null ? data.temperature : "--";
+
+            document.getElementById('val-b').innerText = data.temp2 || "--";
+            document.getElementById('val-c').innerText = data.temp3 || "--";
+
+            // Corrente
+            document.getElementById('val-d').innerText = data.current !== null ? data.current : "--";
+
+            // Dica Visual: Você pode mudar a cor do status se a porta estiver aberta
+            if (data.isDoorOpen) {
+                statusText.innerText = "Online - PORTA ABERTA ⚠️";
+                statusText.style.color = "orange";
+            } else {
+                statusText.innerText = "Online - Recebendo Dados";
+                statusText.className = "online";
+            }
+
+        } catch (error) {
+            console.error("Erro:", error);
+            statusText.innerText = "Offline - Servidor Indisponível";
+            statusText.className = "offline";
+        }
+    }
+</script>
+</body>
+</html>

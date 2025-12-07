@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: evolution_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution
+      POSTGRES_DB: evolution
+    networks:
+      evolution:
+        aliases:
+          - postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      # ISSO GARANTE QUE SEUS DADOS DO ARDUINO NÃO SUMAM
+      - ./postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2
+    container_name: evolution_redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      evolution:
+        aliases:
+          - redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis_data:/data
+
+  evolution_api:
+    image: atendai/evolution-api:v2.2.2
+    container_name: evolution_api
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      evolution:
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      # ISSO GARANTE QUE O QR CODE DURE APÓS REINICIAR
+      - ./evolution_store:/evolution/store
+
+networks:
+  evolution:
