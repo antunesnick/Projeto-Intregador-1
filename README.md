@@ -1,4 +1,3 @@
-````markdown
 # 🌡️ Sistema de Monitoramento IoT com Alertas via WhatsApp
 
 Este projeto é uma solução completa de IoT (Internet of Things) para monitoramento de temperatura, corrente elétrica e acesso físico (portas). O sistema integra sensores de hardware, um gateway Wi-Fi, uma API Backend robusta e um sistema de notificações em tempo real via WhatsApp.
@@ -111,5 +110,3 @@ O sistema possui "Debounce" de alertas. O ESP8266 verifica localmente se os limi
 -----
 
 Desenvolvido como parte das atividades acadêmicas da disciplina Projeto Intregador 1 de Ciência da Computação.
-
-```
